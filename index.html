@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Scanner to PDF</title>
+  <style>
+    #video {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    #canvas {
+      display: none;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Image Scanner to PDF</h1>
+  <video id="video" autoplay></video>
+  <canvas id="canvas"></canvas>
+  <button id="scanButton">Scan</button>
+  <button id="convertButton" style="display:none;">Convert to PDF</button>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const scanButton = document.getElementById('scanButton');
+    const convertButton = document.getElementById('convertButton');
+    let stream;
+    let pdfDoc = null;
+
+    // Check for camera support
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      .then(function (mediaStream) {
+        stream = mediaStream;
+        video.srcObject = mediaStream;
+        video.onloadedmetadata = function (e) {
+          video.play();
+        };
+      })
+      .catch(function (err) {
+        console.log(err.name + ": " + err.message);
+      });
+
+    // Scan button click event
+    scanButton.addEventListener('click', function () {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+      convertButton.style.display = 'inline';
+    });
+
+    // Convert to PDF button click event
+    convertButton.addEventListener('click', function () {
+      const imgData = canvas.toDataURL('image/jpeg');
+      if (!pdfDoc) {
+        pdfDoc = new jsPDF();
+      }
+      pdfDoc.addImage(imgData, 'JPEG', 0, 0, pdfDoc.internal.pageSize.getWidth(), pdfDoc.internal.pageSize.getHeight());
+      pdfDoc.save('scanned_document.pdf');
+    });
+  </script>
+</body>
+</html>
